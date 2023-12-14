@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "sensors.h": "c"
+        "sensors.h": "c",
+        "ev3.h": "c",
+        "ev3_light.h": "c"
     }
 }

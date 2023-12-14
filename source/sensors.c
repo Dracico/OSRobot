@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "../libraries/sensors.h"
+#include "../include/sensors.h"
 
 void say_hello(void)
 {
