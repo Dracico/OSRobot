@@ -2,7 +2,6 @@
 robot
 main
 build
-ev3dev-c
 
 # General
 .DS_Store
