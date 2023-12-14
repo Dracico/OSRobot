@@ -4,22 +4,14 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Clean directory",
-            "type": "shell",
-            "command": "rm -f robot "
-        },
-        {
             "label": "Compile code",
             "type": "shell",
-            "command": "docker run -e LOCAL_USER_ID=`id -u $USER` -it -v `pwd`:/src -w /src ev3dev/debian-stretch-cross sudo arm-linux-gnueabi-gcc -g -o robot robot.c",
-            "dependsOn": [
-                "Clean directory"
-            ]
+            "command": "docker run -e LOCAL_USER_ID=`id -u $USER` -it -v `pwd`:/src -w /src ev3dev/debian-stretch-cross sudo make all"
         },
         {
             "label": "Copy code",
             "type": "shell",
-            "command": "scp robot robot@192.168.199.11:/home/robot/",
+            "command": "scp main robot@192.168.199.11:/home/robot/",
             "dependsOn": [
                 "Compile code"
             ]
@@ -27,7 +19,7 @@
         {
             "label": "Run",
             "type": "shell",
-            "command": "ssh robot@192.168.199.11 './robot' ",
+            "command": "ssh robot@192.168.199.11 './main'",
             "dependsOn": [
                 "Copy code"
             ]
