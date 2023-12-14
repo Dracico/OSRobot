@@ -2,7 +2,7 @@
 
 int main(int argc, const char *argv[])
 {
-    printf("OS is not fantastic!!\n");
+    printf("OS is not chicken fantastic!!\n");
 
     return 0;
 }
