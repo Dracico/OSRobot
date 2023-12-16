@@ -2,6 +2,8 @@
     "files.associations": {
         "sensors.h": "c",
         "ev3.h": "c",
-        "ev3_light.h": "c"
+        "ev3_light.h": "c",
+        "ev3_sensor.h": "c",
+        "stdio.h": "c"
     }
 }

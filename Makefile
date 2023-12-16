@@ -29,7 +29,8 @@ BUILD_DIR 	= ./build
 SOURCE_DIR 	= ./source
 
 OBJS = \
-	$(BUILD_DIR)/sensors.o \
+	$(BUILD_DIR)/touch.o \
+	$(BUILD_DIR)/motors.o \
 	$(BUILD_DIR)/main.o
 
 all: main
