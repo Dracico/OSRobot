@@ -107,3 +107,13 @@ void move_motor_angle(uint8_t sn, int degrees, bool blocking)
         } while (state);
     }
 }
+
+void wait_motor_stop()
+{
+    FLAGS_T stateLeft, stateRight;
+    do
+    {
+        get_tacho_state_flags(leftWheel, &stateLeft);
+        get_tacho_state_flags(rightWheel, &stateRight);
+    } while (stateLeft || stateRight);
+}
