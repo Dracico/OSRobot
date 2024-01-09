@@ -78,14 +78,32 @@ bool setup_motors(void)
     return true;
 }
 
-void move_motor(uint8_t sn, int direction)
+void move_motor(uint8_t sn, int direction, bool blocking)
 {
     FLAGS_T state;
 
     set_tacho_speed_sp(sn, 300 * direction);
     set_tacho_command_inx(sn, TACHO_RUN_TIMED);
-    /*do
+    if (blocking)
     {
-        get_tacho_state_flags(sn, &state);
-    } while (state);*/
+        do
+        {
+            get_tacho_state_flags(sn, &state);
+        } while (state);
+    }
+}
+
+void move_motor_angle(uint8_t sn, int degrees, bool blocking)
+{
+    FLAGS_T state;
+
+    set_tacho_position_sp(sn, degrees);
+    set_tacho_command_inx(sn, TACHO_RUN_TO_REL_POS);
+    if (blocking)
+    {
+        do
+        {
+            get_tacho_state_flags(sn, &state);
+        } while (state);
+    }
 }

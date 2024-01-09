@@ -15,11 +15,15 @@ int main(void)
         printf("Can't setup motors!");
         return 1;
     }
+    // Raise the arm (just in case its down)
+    move_motor(arm, 1, true);
 
-    move_motor(leftWheel, 1);
-    move_motor(rightWheel, 1);
-    // move_motor(arm, -1);
-    // move_motor(arm, 1);
+    // Pick up the flag and wait for the arm to stop moving
+    move_motor(arm, -1, true);
+
+    // Move backwards (both wheels at the same time)
+    move_motor_angle(leftWheel, -360, false);
+    move_motor_angle(rightWheel, -360, false);
     /*printf("Waiting the EV3 brick online...\n");
     fflush(stdout);
     if (ev3_init() < 1)
