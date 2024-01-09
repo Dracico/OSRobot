@@ -30,6 +30,9 @@ SOURCE_DIR 	= ./source
 
 OBJS = \
 	$(BUILD_DIR)/touch.o \
+	$(BUILD_DIR)/gyro.o \
+	$(BUILD_DIR)/color.o \
+	$(BUILD_DIR)/sonar.o \
 	$(BUILD_DIR)/motors.o \
 	$(BUILD_DIR)/main.o
 
