@@ -15,6 +15,7 @@ extern uint8_t arm;
 bool setup_motors(void);
 
 void move_motor(uint8_t sn, int direction, bool blocking);
+void stop_motor(uint8_t sn);
 void move_motor_angle(uint8_t sn, int degrees, bool blocking);
 void wait_motor_stop();
 

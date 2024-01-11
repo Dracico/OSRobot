@@ -60,7 +60,7 @@ bool setup_motors(void)
         {
             printf("Wheel speed setup\n");
             get_tacho_max_speed(sn, &max_speed);
-            set_tacho_stop_action_inx(sn, TACHO_COAST);
+            set_tacho_stop_action_inx(sn, TACHO_BRAKE);
             set_tacho_speed_sp(sn, max_speed * 2 / 3);
             set_tacho_time_sp(sn, 5000);
             set_tacho_ramp_up_sp(sn, 2000);
@@ -70,10 +70,35 @@ bool setup_motors(void)
         {
             printf("Arm speed setup\n");
             get_tacho_max_speed(sn, &max_speed);
-            set_tacho_stop_action_inx(sn, TACHO_COAST);
-            set_tacho_time_sp(sn, 500);
+            set_tacho_stop_action_inx(sn, TACHO_BRAKE);
+            set_tacho_command_inx(sn, TACHO_STOP);
+            set_tacho_speed_sp(sn, 100);
         }
     }
+
+    return true;
+}
+
+// Change the speed of the motors. Quotient is the divider of the speed
+bool change_motors_speed(int quotient)
+{
+    int max_speed;
+
+    printf("Right Wheel speed setup\n");
+    get_tacho_max_speed(rightWheel, &max_speed);
+    set_tacho_stop_action_inx(rightWheel, TACHO_BRAKE);
+    set_tacho_speed_sp(rightWheel, max_speed / quotient);
+    set_tacho_time_sp(rightWheel, 5000);
+    set_tacho_ramp_up_sp(rightWheel, 2000);
+    set_tacho_ramp_down_sp(rightWheel, 2000);
+
+    printf("Right Wheel speed setup\n");
+    get_tacho_max_speed(leftWheel, &max_speed);
+    set_tacho_stop_action_inx(leftWheel, TACHO_BRAKE);
+    set_tacho_speed_sp(leftWheel, max_speed / quotient);
+    set_tacho_time_sp(leftWheel, 5000);
+    set_tacho_ramp_up_sp(leftWheel, 2000);
+    set_tacho_ramp_down_sp(leftWheel, 2000);
 
     return true;
 }
@@ -82,7 +107,7 @@ void move_motor(uint8_t sn, int direction, bool blocking)
 {
     FLAGS_T state;
 
-    set_tacho_speed_sp(sn, 300 * direction);
+    set_tacho_speed_sp(sn, 100 * direction);
     set_tacho_command_inx(sn, TACHO_RUN_TIMED);
     if (blocking)
     {
@@ -106,6 +131,11 @@ void move_motor_angle(uint8_t sn, int degrees, bool blocking)
             get_tacho_state_flags(sn, &state);
         } while (state);
     }
+}
+
+void stop_motor(uint8_t sn)
+{
+    set_tacho_command_inx(sn, TACHO_STOP);
 }
 
 void wait_motor_stop()

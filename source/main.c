@@ -12,7 +12,7 @@ int flag_distance = 1000;
 int flag_angle = 0;
 
 // Detect the color in front of the robot
-void *sonarFindFlag(void *vargp)
+void *threadSonarFindFlag(void *vargp)
 {
     int gyro = get_gyro();
     int sonar = get_sonar();
@@ -32,7 +32,7 @@ void *sonarFindFlag(void *vargp)
 }
 
 // Detect the color in front of the robot
-void *mainColor(void *vargp)
+void *threadCountLines(void *vargp)
 {
     int white = 6;
     while (true)
@@ -45,13 +45,59 @@ void *mainColor(void *vargp)
             printf("%d\n", color);
             fflush(stdout);
             linesCrossed++;
+            printf("Line crossed %d\n", linesCrossed);
+            fflush(stdout);
 
             while (color != white)
             {
                 color = get_color();
-                sleep(1);
             }
         }
+    }
+}
+
+void rotateTo(int degrees)
+{
+    int gyro = get_gyro();
+    move_motor_angle(leftWheel, -360, false);
+    move_motor_angle(rightWheel, 360, false);
+    while (gyro < (degrees - 1) || gyro > (degrees + 1))
+    {
+        // Move both wheels to go forward, then get gyro info
+        if (degrees < 180)
+        {
+            move_motor_angle(leftWheel, -10, false);
+            move_motor_angle(rightWheel, 10, false);
+        }
+        else
+        {
+            move_motor_angle(leftWheel, 10, false);
+            move_motor_angle(rightWheel, -10, false);
+        }
+        sleep(1);
+        gyro = get_gyro();
+    }
+}
+
+void moveForward(int direction, int degrees)
+{
+    // Move both wheels to go forward, then get gyro info
+    move_motor_angle(leftWheel, 360 * direction, false);
+    move_motor_angle(rightWheel, 360 * direction, true);
+    int gyro = get_gyro();
+    // Readjust the robot to face the correct initial direction
+    while (gyro > degrees || gyro < degrees)
+    {
+        if (gyro < 0)
+        {
+            move_motor_angle(leftWheel, -5, false);
+        }
+        else
+        {
+            move_motor_angle(rightWheel, -5, false);
+        }
+        sleep(1);
+        gyro = get_gyro();
     }
 }
 
@@ -80,122 +126,106 @@ int main(void)
     init_sonar();
 
     // Raise the arm (just in case its down)
-    move_motor(arm, 1, true);
+    move_motor_angle(arm, 400, false);
+    sleep(3);
+    stop_motor(arm);
+    move_motor_angle(arm, -120, true);
+    move_motor_angle(arm, -40, true);
 
     // Start the thread to detect color changes
-    pthread_t thread_id;
-    pthread_create(&thread_id, NULL, mainColor, NULL);
+    pthread_t threadCountLines_id;
+    pthread_create(&threadCountLines_id, NULL, threadCountLines, NULL);
 
     // While the robot hasn't crossed the correct number of line
-    /*while (linesCrossed < 4)
+    while (linesCrossed < 4)
     {
-        //Move both wheels to go forward, then get gyro info
-        move_motor_angle(leftWheel, -360, false);
-        move_motor_angle(rightWheel, -360, false);
-        wait_motor_stop();
-        sleep(1);
-        int gyro = get_gyro();
-        //Readjust the robot to face the correct initial direction
-        while (gyro > 3 || gyro < -3)
-        {
-            printf("%d\n", gyro);
-            fflush(stdout);
-            if (gyro < 0)
-            {
-                move_motor_angle(leftWheel, -10, false);
-            }
-            else
-            {
-                move_motor_angle(rightWheel, -10, false);
-            }
-            // usleep(200);
-            sleep(1);
-
-            gyro = get_gyro();
-        }
-    }*/
-
-    // Move 15º to the right
-    int gyro = get_gyro();
-    while (gyro > -15)
-    {
-        move_motor_angle(leftWheel, 50, false);
-        move_motor_angle(rightWheel, -50, false);
-        sleep(1);
-        gyro = get_gyro();
+        moveForward(-1, 0);
     }
 
-    // Sweep 30º to the left to find the flag
-    pthread_t thread_sonarFindFlag;
-    pthread_create(&thread_sonarFindFlag, NULL, sonarFindFlag, NULL);
-    while (gyro < 15)
+    // Kill thread
+    pthread_cancel(threadCountLines_id);
+    // Reset line count
+    linesCrossed = 0;
+
+    // Rotate 180º
+    rotateTo(180);
+
+    // Go back a bit
+    move_motor_angle(leftWheel, 500, false);
+    move_motor_angle(rightWheel, 500, true);
+
+    // Lower the arm
+    move_motor_angle(arm, -140, false);
+
+    // Start thread again
+    pthread_create(&threadCountLines_id, NULL, threadCountLines, NULL);
+
+    // Go back to the base
+    while (linesCrossed < 5)
     {
-        move_motor_angle(leftWheel, -10, false);
-        move_motor_angle(rightWheel, 10, false);
-        sleep(1);
-        gyro = get_gyro();
+        moveForward(-1, 180);
     }
-    pthread_cancel(thread_sonarFindFlag);
 
     /*
-        // Move to the position of the flag we've found!
-        while (gyro < flag_angle)
+        // Move 15º to the right
+        int gyro = get_gyro();
+        while (gyro > -15)
         {
-            move_motor_angle(leftWheel, -5, false);
-            move_motor_angle(rightWheel, 5, false);
+            move_motor_angle(leftWheel, 50, false);
+            move_motor_angle(rightWheel, -50, false);
             sleep(1);
             gyro = get_gyro();
-        }*/
+        }
 
-    // Get closer to the flag
-    /*int sonar = get_sonar();
-    while (sonar > 200)
-    {
-        // Move both wheels to go forward, then get gyro info
-        move_motor_angle(leftWheel, -20, false);
-        move_motor_angle(rightWheel, -20, false);
-        sleep(1);
-        sonar = get_sonar();
-        printf("%d\n", sonar);
-        fflush(stdout);
-    }*/
-
-    // Rotate to the back!
-    gyro = get_gyro();
-    move_motor_angle(leftWheel, -360, false);
-    move_motor_angle(rightWheel, 360, false);
-    while (gyro < (180 + flag_angle - 1) || gyro > (180 + flag_angle + 1))
-    {
-        // Move both wheels to go forward, then get gyro info
-        if (gyro < (180 + flag_angle))
+        // Sweep 30º to the left to find the flag
+        pthread_t thread_sonarFindFlag;
+        pthread_create(&thread_sonarFindFlag, NULL, sonarFindFlag, NULL);
+        while (gyro < 15)
         {
             move_motor_angle(leftWheel, -10, false);
             move_motor_angle(rightWheel, 10, false);
+            sleep(1);
+            gyro = get_gyro();
         }
-        else
-        {
-            move_motor_angle(leftWheel, 10, false);
-            move_motor_angle(rightWheel, -10, false);
-        }
+        pthread_cancel(thread_sonarFindFlag);
 
-        sleep(1);
+        // Rotate to the back!
         gyro = get_gyro();
-        printf("%d\n", gyro);
-        fflush(stdout);
-    }
+        move_motor_angle(leftWheel, -360, false);
+        move_motor_angle(rightWheel, 360, false);
+        while (gyro < (180 + flag_angle - 1) || gyro > (180 + flag_angle + 1))
+        {
+            // Move both wheels to go forward, then get gyro info
+            if (gyro < (180 + flag_angle))
+            {
+                move_motor_angle(leftWheel, -10, false);
+                move_motor_angle(rightWheel, 10, false);
+            }
+            else
+            {
+                move_motor_angle(leftWheel, 10, false);
+                move_motor_angle(rightWheel, -10, false);
+            }
 
-    // Go back a bit!
-    move_motor_angle(leftWheel, 300 + flag_distance, false);
-    move_motor_angle(rightWheel, 300 + flag_distance, true);
+            sleep(1);
+            gyro = get_gyro();
+            printf("%d\n", gyro);
+            fflush(stdout);
+        }
 
-    // Lower the arm
-    move_motor(arm, -1, true);
+        // Go back a bit!
+        move_motor_angle(leftWheel, 300 + flag_distance, false);
+        move_motor_angle(rightWheel, 300 + flag_distance, true);
 
-    // Go forward!
-    move_motor_angle(leftWheel, -360, false);
-    move_motor_angle(rightWheel, -360, false);
-    sleep(1);
+        // Lower the arm
+        move_motor(arm, -1, true);
 
+        // Go forward!
+        move_motor_angle(leftWheel, -360, false);
+        move_motor_angle(rightWheel, -360, false);
+        sleep(1);
+
+    */
     /*
     // Raise the arm (just in case its down)
     move_motor(arm, 1, true);
