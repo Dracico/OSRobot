@@ -11,8 +11,9 @@
 int linesCrossed = 0;
 int flag_distance = 1000;
 int flag_angle = 0;
+int obstacle_found = 0;
 
-// Detect the color in front of the robot
+// Detect the flag in front of the robot
 void *threadSonarFindFlag(void *vargp)
 {
     int gyro = get_gyro();
@@ -27,6 +28,21 @@ void *threadSonarFindFlag(void *vargp)
             flag_distance = sonar;
             flag_angle = gyro;
             printf("Sonar=%d Angle=%d\n", flag_distance, flag_angle);
+            fflush(stdout);
+        }
+    }
+}
+
+void *threadSonarObstacles(void *vargp)
+{
+    int sonar = get_sonar();
+    while (true)
+    {
+        sonar = get_sonar();
+        if (sonar < 100)
+        {
+            obstacle_found = 1;
+            printf("%d\n", obstacle_found);
             fflush(stdout);
         }
     }
@@ -60,22 +76,42 @@ void *threadCountLines(void *vargp)
 void rotateTo(int degrees)
 {
     int gyro = get_gyro();
-    move_motor_angle(leftWheel, -420, false);
-    move_motor_angle(rightWheel, 420, false);
-    while (gyro < (degrees - 1) || gyro > (degrees + 1))
+
+    if (gyro < degrees)
+    {
+        move_motor(leftWheel, -1, false);
+        move_motor(rightWheel, 1, false);
+        while (gyro < (degrees - 8))
+        {
+            gyro = get_gyro();
+        }
+    }
+    else
+    {
+        move_motor(leftWheel, 1, false);
+        move_motor(rightWheel, -1, false);
+        while (gyro > (degrees + 8))
+        {
+            gyro = get_gyro();
+        }
+    }
+
+    motor_stop();
+
+    gyro = get_gyro();
+    while (gyro < degrees || gyro > degrees)
     {
         // Move both wheels to go forward, then get gyro info
         if (gyro < degrees)
         {
-            move_motor_angle(leftWheel, -10, false);
-            move_motor_angle(rightWheel, 10, false);
+            move_motor_angle(leftWheel, -3, false);
+            move_motor_angle(rightWheel, 3, true);
         }
         else
         {
-            move_motor_angle(leftWheel, 10, false);
-            move_motor_angle(rightWheel, -10, false);
+            move_motor_angle(leftWheel, 3, false);
+            move_motor_angle(rightWheel, -3, true);
         }
-        sleep(1);
         gyro = get_gyro();
     }
 }
@@ -83,30 +119,34 @@ void rotateTo(int degrees)
 void moveForward(int direction, int degrees)
 {
     // Move both wheels to go forward, then get gyro info
-    move_motor_angle(leftWheel, 360 * direction, false);
-    move_motor_angle(rightWheel, 360 * direction, true);
+    move_motor(leftWheel, direction * 3, false);
+    move_motor(rightWheel, direction * 3, false);
+    sleep(1);
+    motor_stop();
     int gyro = get_gyro();
     // Readjust the robot to face the correct initial direction
-    while (gyro > degrees || gyro < degrees)
+    while (gyro > (degrees + 2) || gyro < (degrees - 2))
     {
         printf("%d %d\n", gyro, degrees);
         fflush(stdout);
         if (gyro < degrees)
         {
-            move_motor_angle(leftWheel, -5, false);
+            move_motor_angle(leftWheel, -3, false);
+            move_motor_angle(rightWheel, 3, false);
+            wait_motor_stop();
         }
         else
         {
-            move_motor_angle(rightWheel, -5, false);
+            move_motor_angle(rightWheel, -3, false);
+            move_motor_angle(leftWheel, 3, false);
+            wait_motor_stop();
         }
-        sleep(1);
         gyro = get_gyro();
     }
 }
 
 void scanFlagAndCorrect()
 {
-
     change_motors_speed(1, 15);
 
     move_motor_angle(leftWheel, 100, false);
@@ -115,40 +155,15 @@ void scanFlagAndCorrect()
 
     pthread_t threadSonarFindFlag_id;
     pthread_create(&threadSonarFindFlag_id, NULL, threadSonarFindFlag, NULL);
-    sleep(1);
 
     move_motor_angle(leftWheel, -200, false);
     move_motor_angle(rightWheel, 200, false);
     wait_motor_stop();
 
     pthread_cancel(threadSonarFindFlag_id);
-
-    move_motor_angle(leftWheel, 100, false);
-    move_motor_angle(rightWheel, -100, false);
-    wait_motor_stop();
-
-    // Readjust the robot to face the flag
-    int gyro = get_gyro();
-    while (gyro > (flag_angle + 1) || gyro < (flag_angle - 1))
-    {
-        printf("%d %d\n", gyro, flag_angle);
-        fflush(stdout);
-        if (gyro > flag_angle)
-        {
-            move_motor_angle(leftWheel, 5, false);
-            move_motor_angle(rightWheel, -5, false);
-        }
-        else
-        {
-            move_motor_angle(leftWheel, -5, false);
-            move_motor_angle(rightWheel, 5, false);
-        }
-
-        sleep(1);
-        gyro = get_gyro();
-    }
-    sleep(1);
     change_motors_speed(2, 3);
+
+    rotateTo(flag_angle);
 }
 
 int main(void)
@@ -183,41 +198,52 @@ int main(void)
     // Start the thread to detect color changes
     pthread_t threadCountLines_id;
     pthread_create(&threadCountLines_id, NULL, threadCountLines, NULL);
+    pthread_t threadSonarObstacles_id;
+    pthread_create(&threadSonarObstacles_id, NULL, threadSonarObstacles, NULL);
+    /*
+         rotateTo(30);
+         while (linesCrossed < 3)
+         {
+             moveForward(-1, 30);
+         }
 
-    // While the robot hasn't crossed the correct number of line
-    while (linesCrossed < 4)
-    {
-        moveForward(-1, 0);
-    }
+         rotateTo(-30);
 
-    // Kill thread
-    pthread_cancel(threadCountLines_id);
-    // Reset line count
-    linesCrossed = 0;
+         while (linesCrossed < 5)
+         {
+             moveForward(-1, -30);
+         }
+         rotateTo(0);
 
-    // Scanning and reaching for the flag and reaching it (after having crossed the 4th line as pre-condition)
-    scanFlagAndCorrect();
-    while (flag_distance > 150)
-    {
-        // change_motors_speed(10);
+         // Kill thread
+         pthread_cancel(threadCountLines_id);
+         // Reset line count
+         linesCrossed = 0;
 
-        move_motor_angle(leftWheel, -150, false);
-        move_motor_angle(rightWheel, -150, false);
-        sleep(1);
+         // Scanning and reaching for the flag and reaching it (after having crossed the 4th line as pre-condition)
+         scanFlagAndCorrect();
+         while (flag_distance > 150)
+         {
+             // change_motors_speed(10);
 
-        scanFlagAndCorrect();
-    }
+             move_motor_angle(leftWheel, -200, false);
+             move_motor_angle(rightWheel, -200, false);
+             sleep(1);
 
-    // Rotate 180º
-    rotateTo(180 + flag_angle + 5);
+             scanFlagAndCorrect();
+         }
 
-    // Go back a bit
-    move_motor_angle(leftWheel, 400, false);
-    move_motor_angle(rightWheel, 400, false);
-    wait_motor_stop();
+         // Rotate 180º
+         rotateTo(180 + flag_angle + 5);
 
+         // Go back a bit
+         move_motor_angle(leftWheel, 400, false);
+         move_motor_angle(rightWheel, 400, false);
+         wait_motor_stop();
+*/
     // Lower the arm
-    move_motor_angle(arm, -120, true);
+    move_motor_angle(arm, -120, false);
+    sleep(1);
 
     // Go back a bit
     move_motor_angle(leftWheel, -100, false);
@@ -226,33 +252,42 @@ int main(void)
     sleep(1);
 
     // Lower the arm
-    move_motor_angle(arm, -40, false);
+    move_motor_angle(arm, -50, false);
 
-    // Go back a bit
-    move_motor_angle(leftWheel, -500, false);
-    move_motor_angle(rightWheel, -500, false);
+    // Go forward a bit
+    move_motor_angle(leftWheel, -200, false);
+    move_motor_angle(rightWheel, -200, false);
+    wait_motor_stop();
 
     // Start thread again
-    pthread_create(&threadCountLines_id, NULL, threadCountLines, NULL);
 
-    // Go back to the base
-    while (linesCrossed < 4)
+    rotateTo(90); // 210);
+                  // Go back to the base
+
+    obstacle_found = 0;
+    while (obstacle_found == 0)
     {
-        moveForward(-1, 180);
+        moveForward(-1, 90);
     }
-    pthread_cancel(threadCountLines_id);
 
     rotateTo(0);
-
-    moveForward(1, 0);
-    moveForward(1, 0);
+    obstacle_found = 0;
+    linesCrossed = 0;
+    while (obstacle_found == 0 || linesCrossed < 3)
+    {
+        moveForward(-1, 0);
+    }
+    rotateTo(180);
 
     // Raise the arm (just in case its down)
+    move_motor_angle(leftWheel, 100, false);
+    move_motor_angle(rightWheel, 100, true);
+
     move_motor_angle(arm, 400, false);
-    move_motor_angle(leftWheel, -30, false);
-    move_motor_angle(rightWheel, -30, false);
     sleep(3);
     stop_motor(arm);
+    move_motor_angle(leftWheel, -100, false);
+    move_motor_angle(rightWheel, -100, false);
 
     return 0;
 }

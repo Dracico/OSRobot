@@ -106,7 +106,7 @@ void move_motor(uint8_t sn, int direction, bool blocking)
         do
         {
             get_tacho_state_flags(sn, &state);
-        } while (state);
+        } while (state != 2 && state != 0);
     }
 }
 
@@ -121,7 +121,7 @@ void move_motor_angle(uint8_t sn, int degrees, bool blocking)
         do
         {
             get_tacho_state_flags(sn, &state);
-        } while (state);
+        } while (state != 2 && state != 0);
     }
 }
 
@@ -137,5 +137,14 @@ void wait_motor_stop()
     {
         get_tacho_state_flags(leftWheel, &stateLeft);
         get_tacho_state_flags(rightWheel, &stateRight);
-    } while (stateLeft || stateRight);
+        fflush(stdout);
+    } while ((leftWheel != 2 && leftWheel != 0) || (stateRight != 2 && stateRight != 0));
+}
+
+void motor_stop()
+{
+    set_tacho_command_inx(rightWheel, TACHO_HOLD);
+    set_tacho_command_inx(leftWheel, TACHO_HOLD);
+    set_tacho_command_inx(rightWheel, TACHO_STOP);
+    set_tacho_command_inx(leftWheel, TACHO_STOP);
 }
