@@ -1,4 +1,4 @@
-OS Robot Team 2 : SuperSlow Robot
+OS Robot Team 2 : Wrench Logic
 
 - André PACTEAU
 - Efrén BOYARIZO GARGALLO
