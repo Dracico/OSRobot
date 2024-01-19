@@ -137,7 +137,6 @@ void wait_motor_stop()
     {
         get_tacho_state_flags(leftWheel, &stateLeft);
         get_tacho_state_flags(rightWheel, &stateRight);
-        fflush(stdout);
     } while ((leftWheel != 2 && leftWheel != 0) || (stateRight != 2 && stateRight != 0));
 }
 

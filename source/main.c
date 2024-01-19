@@ -12,6 +12,7 @@ int linesCrossed = 0;
 int flag_distance = 1000;
 int flag_angle = 0;
 int obstacle_found = 0;
+int obstacle_distance = 100;
 
 // Detect the flag in front of the robot
 void *threadSonarFindFlag(void *vargp)
@@ -39,10 +40,9 @@ void *threadSonarObstacles(void *vargp)
     while (true)
     {
         sonar = get_sonar();
-        if (sonar < 100)
+        if (sonar < obstacle_distance)
         {
             obstacle_found = 1;
-            printf("%d\n", obstacle_found);
             fflush(stdout);
         }
     }
@@ -145,12 +145,30 @@ void moveForward(int direction, int degrees)
     }
 }
 
+void avoid_obstacles(int direction, int degrees)
+{
+    // Avoid obstacles
+    printf("%d\n", get_sonar());
+    fflush(stdout);
+    if (obstacle_found)
+    {
+        rotateTo(degrees - 90);
+        move_motor(leftWheel, direction * 4, false);
+        move_motor(rightWheel, direction * 4, false);
+        sleep(1);
+        motor_stop();
+        rotateTo(degrees);
+    }
+    obstacle_found = 0;
+}
+
 void scanFlagAndCorrect()
 {
     change_motors_speed(1, 15);
+    sleep(1);
 
-    move_motor_angle(leftWheel, 100, false);
     move_motor_angle(rightWheel, -100, false);
+    move_motor_angle(leftWheel, 100, false);
     wait_motor_stop();
 
     pthread_t threadSonarFindFlag_id;
@@ -191,99 +209,106 @@ int main(void)
     init_sonar();
 
     // Raise the arm (just in case its down)
-    move_motor_angle(arm, 400, false);
-    sleep(3);
-    stop_motor(arm);
+    /*  move_motor_angle(arm, 400, false);
+      sleep(3);
+      stop_motor(arm);
 
-    // Start the thread to detect color changes
-    pthread_t threadCountLines_id;
-    pthread_create(&threadCountLines_id, NULL, threadCountLines, NULL);
-    pthread_t threadSonarObstacles_id;
-    pthread_create(&threadSonarObstacles_id, NULL, threadSonarObstacles, NULL);
-    /*
-         rotateTo(30);
-         while (linesCrossed < 3)
-         {
-             moveForward(-1, 30);
-         }
+      // Start the thread to detect color changes
+      pthread_t threadCountLines_id;
+      pthread_create(&threadCountLines_id, NULL, threadCountLines, NULL);
+      pthread_t threadSonarObstacles_id;
+      pthread_create(&threadSonarObstacles_id, NULL, threadSonarObstacles, NULL);
 
-         rotateTo(-30);
+      rotateTo(20);
+      while (linesCrossed < 3)
+      {
+          moveForward(-1, 20);
+      }
 
-         while (linesCrossed < 5)
-         {
-             moveForward(-1, -30);
-         }
-         rotateTo(0);
+      rotateTo(-25);
 
-         // Kill thread
-         pthread_cancel(threadCountLines_id);
-         // Reset line count
-         linesCrossed = 0;
+      obstacle_distance = 300;
+      while (linesCrossed < 5)
+      {
+          avoid_obstacles(-1, -25);
+          moveForward(-1, -25);
+      }
+      rotateTo(0);
 
-         // Scanning and reaching for the flag and reaching it (after having crossed the 4th line as pre-condition)
-         scanFlagAndCorrect();
-         while (flag_distance > 150)
-         {
-             // change_motors_speed(10);
+      // Reset line count
+      linesCrossed = 0;
 
-             move_motor_angle(leftWheel, -200, false);
-             move_motor_angle(rightWheel, -200, false);
-             sleep(1);
+      // Scanning and reaching for the flag and reaching it (after having crossed the 4th line as pre-condition)
+      scanFlagAndCorrect();
+      while (flag_distance > 150)
+      {
+          // change_motors_speed(10);
 
-             scanFlagAndCorrect();
-         }
+          move_motor_angle(leftWheel, -200, false);
+          move_motor_angle(rightWheel, -200, false);
+          sleep(1);
 
-         // Rotate 180º
-         rotateTo(180 + flag_angle + 5);
+          scanFlagAndCorrect();
+      }
 
-         // Go back a bit
-         move_motor_angle(leftWheel, 400, false);
-         move_motor_angle(rightWheel, 400, false);
-         wait_motor_stop();
-*/
-    // Lower the arm
-    move_motor_angle(arm, -120, false);
+      // Rotate 180º
+      rotateTo(180 + flag_angle + 4);
+
+      // Go back a bit
+      move_motor_angle(leftWheel, 300, false);
+      move_motor_angle(rightWheel, 300, false);
+      wait_motor_stop();
+
+      // Lower the arm
+      move_motor_angle(arm, -60, false);
+      sleep(1);
+
+      // Go back a bit
+      move_motor_angle(leftWheel, -100, false);
+      move_motor_angle(rightWheel, -100, false);
+
+      sleep(1);
+
+      // Lower the arm
+      move_motor_angle(arm, -40, false);
+
+      // Go forward a bit
+      move_motor_angle(leftWheel, -200, false);
+      move_motor_angle(rightWheel, -200, false);
+      wait_motor_stop();
+
+      // Go back to the base
+      rotateTo(270);
+      obstacle_found = 0;
+      obstacle_distance = 300;
+      while (obstacle_found == 0)
+      {
+          moveForward(-1, 270);
+      }
+
+      rotateTo(180);
+      obstacle_found = 0;
+      linesCrossed = 0;
+      while (linesCrossed < 3)
+      {
+          moveForward(-1, 180);
+          avoid_obstacles(-1, 180);
+      }
+      rotateTo(0);
+  */
+    change_motors_speed(1, 10);
+    move_motor_angle(leftWheel, 500, false);
+    move_motor_angle(rightWheel, 500, false);
+    wait_motor_stop();
     sleep(1);
-
-    // Go back a bit
     move_motor_angle(leftWheel, -100, false);
-    move_motor_angle(rightWheel, -100, false);
-
-    sleep(1);
-
-    // Lower the arm
-    move_motor_angle(arm, -50, false);
-
-    // Go forward a bit
-    move_motor_angle(leftWheel, -200, false);
-    move_motor_angle(rightWheel, -200, false);
+    move_motor_angle(rightWheel, 100, false);
     wait_motor_stop();
 
-    // Start thread again
-
-    rotateTo(90); // 210);
-                  // Go back to the base
-
-    obstacle_found = 0;
-    while (obstacle_found == 0)
-    {
-        moveForward(-1, 90);
-    }
-
-    rotateTo(0);
-    obstacle_found = 0;
-    linesCrossed = 0;
-    while (obstacle_found == 0 || linesCrossed < 3)
-    {
-        moveForward(-1, 0);
-    }
-    rotateTo(180);
-
-    // Raise the arm (just in case its down)
-    move_motor_angle(leftWheel, 100, false);
-    move_motor_angle(rightWheel, 100, true);
-
-    move_motor_angle(arm, 400, false);
+    move_motor_angle(arm, 100, true);
+    move_motor_angle(leftWheel, 50, false);
+    move_motor_angle(rightWheel, 50, false);
+    move_motor_angle(arm, 300, false);
     sleep(3);
     stop_motor(arm);
     move_motor_angle(leftWheel, -100, false);
