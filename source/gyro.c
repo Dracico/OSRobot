@@ -11,6 +11,7 @@ int init_gyro(void)
         fflush(stdout);
         // In order to set the angle back to 0 at the start, we need to switch between twp different modes (just a bug?)
         set_sensor_mode(port_gyro, "GYRO-G&A");
+        sleep(1);
         set_sensor_mode(port_gyro, "GYRO-ANG");
         printf("GYRO sensor calibrated!\n", port_gyro);
         fflush(stdout);

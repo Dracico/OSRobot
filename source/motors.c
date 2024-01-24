@@ -95,6 +95,12 @@ bool change_motors_speed(int multiplier, int quotient)
     return true;
 }
 
+// Change the speed of the motors. Quotient is the divider of the speed
+bool change_arm_speed(int value)
+{
+    set_tacho_speed_sp(arm, value);
+    return true;
+}
 void move_motor(uint8_t sn, int direction, bool blocking)
 {
     FLAGS_T state;

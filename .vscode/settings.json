@@ -5,6 +5,7 @@
         "ev3_light.h": "c",
         "ev3_sensor.h": "c",
         "stdio.h": "c",
-        "touch.h": "c"
+        "touch.h": "c",
+        "gyro.h": "c"
     }
 }

@@ -11,7 +11,7 @@
         {
             "label": "Copy code",
             "type": "shell",
-            "command": "scp main robot@192.168.146.11:/home/robot/",
+            "command": "scp main robot@192.168.111.12:/home/robot/",
             "dependsOn": [
                 "Compile code"
             ]
@@ -19,7 +19,7 @@
         {
             "label": "Execute",
             "type": "shell",
-            "command": "ssh robot@192.168.146.11 './main' || true",
+            "command": "ssh robot@192.168.111.12 './main' || true",
             "dependsOn": [
                 "Copy code"
             ]
@@ -27,7 +27,7 @@
         {
             "label": "Run",
             "type": "shell",
-            "command": "ssh robot@192.168.146.11 'pkill -9 main'",
+            "command": "ssh robot@192.168.111.12 'pkill -9 main'",
             "dependsOn": [
                 "Execute"
             ]

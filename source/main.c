@@ -125,8 +125,14 @@ void moveForward(int direction, int degrees)
     motor_stop();
     int gyro = get_gyro();
     // Readjust the robot to face the correct initial direction
+    int stillRunning = 1;
     while (gyro > (degrees + 2) || gyro < (degrees - 2))
     {
+        if (stillRunning)
+        {
+            sleep(1);
+            stillRunning = 0;
+        }
         printf("%d %d\n", gyro, degrees);
         fflush(stdout);
         if (gyro < degrees)
@@ -209,105 +215,112 @@ int main(void)
     init_sonar();
 
     // Raise the arm (just in case its down)
-    /*  move_motor_angle(arm, 400, false);
-      sleep(3);
-      stop_motor(arm);
+    move_motor_angle(arm, 400, false);
+    sleep(3);
+    stop_motor(arm);
 
-      // Start the thread to detect color changes
-      pthread_t threadCountLines_id;
-      pthread_create(&threadCountLines_id, NULL, threadCountLines, NULL);
-      pthread_t threadSonarObstacles_id;
-      pthread_create(&threadSonarObstacles_id, NULL, threadSonarObstacles, NULL);
+    // Start the thread to detect color changes
+    pthread_t threadCountLines_id;
+    pthread_create(&threadCountLines_id, NULL, threadCountLines, NULL);
+    pthread_t threadSonarObstacles_id;
+    pthread_create(&threadSonarObstacles_id, NULL, threadSonarObstacles, NULL);
 
-      rotateTo(20);
-      while (linesCrossed < 3)
-      {
-          moveForward(-1, 20);
-      }
+    rotateTo(20);
+    while (linesCrossed < 3)
+    {
+        moveForward(-1, 20);
+    }
 
-      rotateTo(-25);
+    rotateTo(-22);
 
-      obstacle_distance = 300;
-      while (linesCrossed < 5)
-      {
-          avoid_obstacles(-1, -25);
-          moveForward(-1, -25);
-      }
-      rotateTo(0);
+    obstacle_distance = 300;
+    while (linesCrossed < 5)
+    {
+        // avoid_obstacles(-1, -25);
+        moveForward(-1, -22);
+    }
+    rotateTo(0);
 
-      // Reset line count
-      linesCrossed = 0;
+    // Reset line count
+    linesCrossed = 0;
 
-      // Scanning and reaching for the flag and reaching it (after having crossed the 4th line as pre-condition)
-      scanFlagAndCorrect();
-      while (flag_distance > 150)
-      {
-          // change_motors_speed(10);
+    // Scanning and reaching for the flag and reaching it (after having crossed the 4th line as pre-condition)
+    scanFlagAndCorrect();
+    while (flag_distance > 150)
+    {
+        // change_motors_speed(10);
 
-          move_motor_angle(leftWheel, -200, false);
-          move_motor_angle(rightWheel, -200, false);
-          sleep(1);
+        move_motor_angle(leftWheel, -200, false);
+        move_motor_angle(rightWheel, -200, false);
+        sleep(1);
 
-          scanFlagAndCorrect();
-      }
+        scanFlagAndCorrect();
+    }
 
-      // Rotate 180º
-      rotateTo(180 + flag_angle + 4);
+    // Rotate 180º
+    rotateTo(180 + flag_angle + 3);
 
-      // Go back a bit
-      move_motor_angle(leftWheel, 300, false);
-      move_motor_angle(rightWheel, 300, false);
-      wait_motor_stop();
+    // Go forward a bit
+    move_motor_angle(leftWheel, 300, false);
+    move_motor_angle(rightWheel, 300, false);
+    wait_motor_stop();
 
-      // Lower the arm
-      move_motor_angle(arm, -60, false);
-      sleep(1);
+    // Lower the arm
+    move_motor_angle(arm, -60, false);
+    sleep(1);
 
-      // Go back a bit
-      move_motor_angle(leftWheel, -100, false);
-      move_motor_angle(rightWheel, -100, false);
+    // Go forward a bit
+    move_motor_angle(leftWheel, -100, false);
+    move_motor_angle(rightWheel, -100, false);
 
-      sleep(1);
+    sleep(1);
 
-      // Lower the arm
-      move_motor_angle(arm, -40, false);
+    // Lower the arm
+    move_motor_angle(arm, -50, false);
 
-      // Go forward a bit
-      move_motor_angle(leftWheel, -200, false);
-      move_motor_angle(rightWheel, -200, false);
-      wait_motor_stop();
+    // Go forward a bit
+    move_motor_angle(leftWheel, -200, false);
+    move_motor_angle(rightWheel, -200, false);
+    wait_motor_stop();
 
-      // Go back to the base
-      rotateTo(270);
-      obstacle_found = 0;
-      obstacle_distance = 300;
-      while (obstacle_found == 0)
-      {
-          moveForward(-1, 270);
-      }
+    // Go back to the base
+    rotateTo(270);
+    obstacle_found = 0;
+    obstacle_distance = 180;
+    while (obstacle_found == 0)
+    {
+        moveForward(-1, 270);
+    }
 
-      rotateTo(180);
-      obstacle_found = 0;
-      linesCrossed = 0;
-      while (linesCrossed < 3)
-      {
-          moveForward(-1, 180);
-          avoid_obstacles(-1, 180);
-      }
-      rotateTo(0);
-  */
-    change_motors_speed(1, 10);
-    move_motor_angle(leftWheel, 500, false);
-    move_motor_angle(rightWheel, 500, false);
+    rotateTo(180);
+    obstacle_found = 0;
+    obstacle_distance = 200;
+    linesCrossed = 0;
+    while (linesCrossed < 3 && obstacle_found == 0)
+    {
+        obstacle_found = 0;
+        moveForward(-1, 180);
+        // avoid_obstacles(-1, 180);
+    }
+    rotateTo(360);
+
+    change_motors_speed(1, 15);
+    move_motor_angle(leftWheel, 600, false);
+    move_motor_angle(rightWheel, 600, false);
     wait_motor_stop();
     sleep(1);
     move_motor_angle(leftWheel, -100, false);
-    move_motor_angle(rightWheel, 100, false);
+    move_motor_angle(rightWheel, -100, false);
     wait_motor_stop();
 
-    move_motor_angle(arm, 100, true);
-    move_motor_angle(leftWheel, 50, false);
-    move_motor_angle(rightWheel, 50, false);
+    move_motor_angle(arm, 40, true);
+    sleep(1);
+    move_motor_angle(leftWheel, 70, false);
+    move_motor_angle(rightWheel, 70, false);
+    sleep(1);
+
+    rotateTo(355);
+
     move_motor_angle(arm, 300, false);
     sleep(3);
     stop_motor(arm);

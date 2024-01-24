@@ -20,5 +20,6 @@ void move_motor_angle(uint8_t sn, int degrees, bool blocking);
 void wait_motor_stop();
 void motor_stop();
 bool change_motors_speed(int multiplier, int quotient);
+bool change_arm_speed(int value);
 
 #endif
