@@ -141,7 +141,7 @@ void moveForward(int direction, int degrees)
     // Readjust the robot to face the correct initial direction
     int stillRunning = 1;
     // While running, if the direction deviates too much, stop and correct
-    while (gyro > (degrees + 2) || gyro < (degrees - 2))
+    while (gyro > (degrees + 5) || gyro < (degrees - 5))
     {
         // stops
         if (stillRunning)
@@ -175,16 +175,15 @@ void avoid_obstacles(int direction, int degrees, int initial_value)
     printf("%d\n", get_sonar());
     fflush(stdout);
     // If an obstacle is found with the sonar
-    if (obstacle_found)
-    {
-        // Rotate to 90 degrees, move forward, return to original angle and start moving again
-        rotateTo(degrees);
-        move_motor_angle(leftWheel, 300 * direction, false);
-        move_motor_angle(rightWheel, 300 * direction, false);
-        wait_motor_stop();
-        rotateTo(initial_value);
-        correctDirection = correctDirection * -1;
-    }
+
+    // Rotate to 90 degrees, move forward, return to original angle and start moving again
+    rotateTo(degrees);
+    move_motor_angle(leftWheel, 300 * direction, false);
+    move_motor_angle(rightWheel, 300 * direction, false);
+    wait_motor_stop();
+    rotateTo(initial_value);
+    correctDirection = correctDirection * -1;
+
     obstacle_found = 0;
 }
 
@@ -249,14 +248,15 @@ int main(void)
     pthread_t threadCountLines_id;
     pthread_t threadSonarObstacles_id;
 
-    // Rotate to 20° to evade the central obstacle
+    // Rotate to 90° to evade the central obstacle
     rotateTo(90);
 
     // Stopping the arm after a while while save us 4 seconds on boot time
     stop_motor(arm);
 
     // Go forward until it has crossed 3 lines
-    obstacle_distance = 100;
+    obstacle_distance = 150;
+    change_motors_speed(1, 2);
     pthread_create(&threadSonarObstacles_id, NULL, threadSonarObstacles, NULL);
     while (obstacle_found == 0)
     {
@@ -276,22 +276,26 @@ int main(void)
     pthread_create(&threadCountLines_id, NULL, threadCountLines, NULL);
     while (linesCrossed < 3)
     {
-        if (correctDirection > 0)
+        if (obstacle_found)
         {
-            avoid_obstacles(-1, -90, 0);
-        }
-        else
-        {
-            avoid_obstacles(-1, 90, 0);
+            pthread_cancel(threadCountLines_id);
+            if (correctDirection > 0)
+            {
+                avoid_obstacles(-1, -90, 0);
+            }
+            else
+            {
+                avoid_obstacles(-1, 90, 0);
+            }
+            pthread_create(&threadCountLines_id, NULL, threadCountLines, NULL);
         }
         moveForward(-1, 0);
     }
     pthread_cancel(threadSonarObstacles_id);
     pthread_cancel(threadCountLines_id);
 
-    rotateTo(5);
-    move_motor_angle(leftWheel, -200, false);
-    move_motor_angle(rightWheel, -200, false);
+    move_motor_angle(leftWheel, -300, false);
+    move_motor_angle(rightWheel, -300, false);
     wait_motor_stop();
     rotateTo(-90);
 
@@ -340,7 +344,7 @@ int main(void)
     sleep(2);
 
     // Lower the arm
-    move_motor_angle(arm, -80, false);
+    move_motor_angle(arm, -60, false);
 
     // Go forward a bit
     move_motor_angle(leftWheel, -200, false);
@@ -350,7 +354,7 @@ int main(void)
     // Go back to the base
     rotateTo(260);
     obstacle_found = 0;
-    obstacle_distance = 180;
+    obstacle_distance = 230;
     pthread_create(&threadSonarObstacles_id, NULL, threadSonarObstacles, NULL);
     while (obstacle_found == 0)
     {
@@ -368,13 +372,18 @@ int main(void)
     pthread_create(&threadSonarObstacles_id, NULL, threadSonarObstacles, NULL);
     while (linesCrossed < 3)
     {
-        if (correctDirection > 0)
+        if (obstacle_found)
         {
-            avoid_obstacles(-1, 270, 175);
-        }
-        else
-        {
-            avoid_obstacles(-1, 90, 175);
+            pthread_cancel(threadCountLines_id);
+            if (correctDirection > 0)
+            {
+                avoid_obstacles(-1, 270, 175);
+            }
+            else
+            {
+                avoid_obstacles(-1, 90, 175);
+            }
+            pthread_create(&threadCountLines_id, NULL, threadCountLines, NULL);
         }
         moveForward(-1, 175);
         // avoid_obstacles(-1, 180);
@@ -388,8 +397,8 @@ int main(void)
     move_motor_angle(rightWheel, 600, false);
     wait_motor_stop();
     sleep(1);
-    move_motor_angle(leftWheel, -100, false);
-    move_motor_angle(rightWheel, -100, false);
+    move_motor_angle(leftWheel, -80, false);
+    move_motor_angle(rightWheel, -80, false);
     wait_motor_stop();
 
     move_motor_angle(arm, 40, true);
