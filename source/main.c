@@ -72,6 +72,7 @@ void *threadCountLines(void *vargp)
             while (color != white)
             {
                 color = get_color();
+                sleep(1);
             }
         }
     }
@@ -256,7 +257,7 @@ int main(void)
 
     // Go forward until it has crossed 3 lines
     obstacle_distance = 150;
-    change_motors_speed(1, 2);
+    // change_motors_speed(1, 2);
     pthread_create(&threadSonarObstacles_id, NULL, threadSonarObstacles, NULL);
     while (obstacle_found == 0)
     {
@@ -278,7 +279,6 @@ int main(void)
     {
         if (obstacle_found)
         {
-            pthread_cancel(threadCountLines_id);
             if (correctDirection > 0)
             {
                 avoid_obstacles(-1, -90, 0);
@@ -287,7 +287,6 @@ int main(void)
             {
                 avoid_obstacles(-1, 90, 0);
             }
-            pthread_create(&threadCountLines_id, NULL, threadCountLines, NULL);
         }
         moveForward(-1, 0);
     }
@@ -354,7 +353,7 @@ int main(void)
     // Go back to the base
     rotateTo(260);
     obstacle_found = 0;
-    obstacle_distance = 230;
+    obstacle_distance = 180;
     pthread_create(&threadSonarObstacles_id, NULL, threadSonarObstacles, NULL);
     while (obstacle_found == 0)
     {
@@ -374,7 +373,6 @@ int main(void)
     {
         if (obstacle_found)
         {
-            pthread_cancel(threadCountLines_id);
             if (correctDirection > 0)
             {
                 avoid_obstacles(-1, 270, 175);
@@ -383,7 +381,6 @@ int main(void)
             {
                 avoid_obstacles(-1, 90, 175);
             }
-            pthread_create(&threadCountLines_id, NULL, threadCountLines, NULL);
         }
         moveForward(-1, 175);
         // avoid_obstacles(-1, 180);
