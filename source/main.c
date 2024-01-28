@@ -8,12 +8,21 @@
 #include "../include/sonar.h"
 #include "../include/motors.h"
 
+//As our robot used the number of lines crossed to position itself, we use this variable to keep track of them
 int linesCrossed = 0;
+//The current distance to the flag according to the sonar. We give it an initial high value as we will decrement it with each sonar scanning
 int flag_distance = 1000;
+//The angle at which the flag was detected during the sonar scanning. Allows us to know to which angle we should do the 180° rotation to grab it
 int flag_angle = 0;
+//Variable used to keep track of a possible obstacle during cruising step
 int obstacle_found = 0;
+//The limit of distance acceptable for the obstacle. If the distance is greater than 100, the robot won't activate the dodging function
 int obstacle_distance = 100;
+//Variable alternating between 1 and -1, in order to dodge once on the right and once on the left if needed, so the robot stay centered.
 int correctDirection = 1;
+
+//In a lot of function, we will use print calls followed by fflush. fflush was necessary to print stuff in the console at runtime, else the print
+//Would not show in the console until the end of the execution.
 
 // Create a thread and check the sonar to find the flag
 void *threadSonarFindFlag(void *vargp)
@@ -43,6 +52,7 @@ void *threadSonarObstacles(void *vargp)
     while (true)
     {
         sonar = get_sonar();
+        //If the distance of the object is too close, activate the obstacle found
         if (sonar < obstacle_distance)
         {
             obstacle_found = 1;
@@ -216,7 +226,17 @@ void scanFlagAndCorrect()
     rotateTo(flag_angle);
 }
 
-// Main function
+
+/* Main function
+The execution of the main is split into 4 main parts. 
+- The robot will initially enter a cruising phase, where he will get from the starting point to the enemy base (With the obstacle dodging mechanic activated).
+- The robot enters the picking flag phase, where he will scan for it, turn around a grab it
+- The robot then enters a second cruising phase in order to reach back the base
+- The robot enteres the dropping phase, where he will rotate and try to drop the flag in the back 10 cm of the base
+
+*/
+
+
 int main(void)
 {
     // Set up the different sensors and motors
@@ -245,19 +265,22 @@ int main(void)
     // Raise the arm (just in case its down)
     move_motor_angle(arm, 400, false);
 
-    // Start the thread to detect color changes
+    //Start of cruising phase 1
+
+    // Start the thread to detect color changes and obstacles
     pthread_t threadCountLines_id;
     pthread_t threadSonarObstacles_id;
 
     // Rotate to 90° to evade the central obstacle
     rotateTo(90);
 
-    // Stopping the arm after a while while save us 4 seconds on boot time
+    // Stopping the locking of the arm
     stop_motor(arm);
 
-    // Go forward until it has crossed 3 lines
+    // Setup the obstacle distance to 150, so the robot doesn't get too close from the wall or other obstacle
     obstacle_distance = 150;
-    // change_motors_speed(1, 2);
+
+    //Activate the obstacle dodging thread and move forward until reaching the right wall
     pthread_create(&threadSonarObstacles_id, NULL, threadSonarObstacles, NULL);
     while (obstacle_found == 0)
     {
@@ -268,11 +291,13 @@ int main(void)
     // Rotate on the left in order to aim for the enemy flag
     rotateTo(0);
 
-    // Setup the distance of obstacle to avoid false positive
+    // Setup the distance of obstacle to avoid false positive and reset other variables just in case
     obstacle_distance = 100;
     obstacle_found = 0;
     linesCrossed = 0;
     correctDirection = 1;
+
+    //Start the obstacle and color sensor threads
     pthread_create(&threadSonarObstacles_id, NULL, threadSonarObstacles, NULL);
     pthread_create(&threadCountLines_id, NULL, threadCountLines, NULL);
     while (linesCrossed < 3)
@@ -293,11 +318,16 @@ int main(void)
     pthread_cancel(threadSonarObstacles_id);
     pthread_cancel(threadCountLines_id);
 
+    //Once the 3 lines are crossed, continues slightly more forward and turn 90 degrees on the left in order to be close to the flag
     move_motor_angle(leftWheel, -300, false);
     move_motor_angle(rightWheel, -300, false);
     wait_motor_stop();
     rotateTo(-90);
 
+    //End of cruising phase 1
+    //Start of flag picking up phase
+
+    //Move forward until it crosses the line of the enemy starting point
     linesCrossed = 0;
     pthread_create(&threadCountLines_id, NULL, threadCountLines, NULL);
     while (linesCrossed < 1)
@@ -315,7 +345,6 @@ int main(void)
     scanFlagAndCorrect();
     while (flag_distance > 150)
     {
-        // change_motors_speed(10);
 
         move_motor_angle(leftWheel, -180, false);
         move_motor_angle(rightWheel, -180, false);
@@ -324,9 +353,10 @@ int main(void)
         scanFlagAndCorrect();
     }
 
-    // Rotate 180º
+    // Rotate 180º in order to face away from the flag and have the arm next to the flag
     rotateTo(180 + flag_angle);
 
+    //The 4 steps below are done bit by bit in order to minimize the risk of making the flag fall.
     // Go forward a bit
     move_motor_angle(leftWheel, 300, false);
     move_motor_angle(rightWheel, 300, false);
@@ -350,7 +380,11 @@ int main(void)
     move_motor_angle(rightWheel, -200, false);
     wait_motor_stop();
 
+    //End of flag picking up phase
+    //Start of cruising phase 2
+
     // Go back to the base
+    //Rotate to face the right wall. Because we're going back, the 90° angle becomes 260°
     rotateTo(260);
     obstacle_found = 0;
     obstacle_distance = 180;
@@ -361,8 +395,10 @@ int main(void)
     }
     pthread_cancel(threadSonarObstacles_id);
 
-    rotateTo(175);
+    //Once the wall has been reached, rotate to 175° (Angle is not 180 because of gyro imprecision)
 
+    rotateTo(175);
+    //Reset variables like in cruising phase 1 and wait to cross 3 lines
     obstacle_found = 0;
     obstacle_distance = 100;
     linesCrossed = 0;
@@ -387,30 +423,45 @@ int main(void)
     }
     pthread_cancel(threadSonarObstacles_id);
     pthread_cancel(threadCountLines_id);
+    //Rotate to 360 in order to have the arm close to the wall. We use 360 instead of 0 to change the rotation direction
     rotateTo(360);
 
+    //End of cruising phase 2
+    //Start of dropping flag phase
+
+    //Slow down the speed in order to ensure better flag stability
     change_motors_speed(1, 15);
+    //Move backward until the wall is reached (Approximative distance)
     move_motor_angle(leftWheel, 600, false);
     move_motor_angle(rightWheel, 600, false);
     wait_motor_stop();
     sleep(1);
+    //Move slightly forward so arm is not blocked by the wall
     move_motor_angle(leftWheel, -80, false);
     move_motor_angle(rightWheel, -80, false);
     wait_motor_stop();
 
+    //Move arm slightly up, so it is above the wood, but still below the flag tip
     move_motor_angle(arm, 40, true);
     sleep(1);
+    //Go a bit backward so the arm doesn't hit the flag tip and topple it
     move_motor_angle(leftWheel, 70, false);
     move_motor_angle(rightWheel, 70, false);
     sleep(1);
 
+    //Rotate slightly yo make sure the tip isn't blocked by the side of the arm
     rotateTo(355);
 
+    //Move arm back up
     move_motor_angle(arm, 300, false);
     sleep(3);
     stop_motor(arm);
+    //move slightly forward
     move_motor_angle(leftWheel, -100, false);
     move_motor_angle(rightWheel, -100, false);
 
     return 0;
+
 }
+
+// End of flag dropping phase and end of execution

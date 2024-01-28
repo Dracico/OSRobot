@@ -2,6 +2,7 @@
 
 uint8_t port_color;
 
+//Initialize the color sensors
 int init_color(void)
 {
 
@@ -24,6 +25,7 @@ int init_color(void)
     }
 }
 
+//Get the current color value from the sensor. We're looking at white = 6 as our main color
 int get_color(void)
 {
     int val;
