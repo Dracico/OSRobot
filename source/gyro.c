@@ -33,6 +33,8 @@ int get_gyro(void)
     int val;
 
     get_sensor_value(0, port_gyro, &val);
+    //printf("Gyro value = %d", val);
+    //fflush(stdout);
 
     return val;
 }
