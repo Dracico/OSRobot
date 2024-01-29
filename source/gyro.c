@@ -2,8 +2,9 @@
 
 uint8_t port_gyro;
 
-//Initialize the gyro sensor. Some accuracy problems are sometimes detected
-// May need to reboot the robot to fix them
+// Implemented by: André
+// Initialize the gyro sensor. Some accuracy problems are sometimes detected
+//  May need to reboot the robot to fix them
 int init_gyro(void)
 {
 
@@ -27,14 +28,15 @@ int init_gyro(void)
     }
 }
 
-//Get the current gyro angle, with 0 being the angle of the starting position during init
+// Implemented by: André
+// Get the current gyro angle, with 0 being the angle of the starting position during init
 int get_gyro(void)
 {
     int val;
 
     get_sensor_value(0, port_gyro, &val);
-    //printf("Gyro value = %d", val);
-    //fflush(stdout);
+    // printf("Gyro value = %d", val);
+    // fflush(stdout);
 
     return val;
 }

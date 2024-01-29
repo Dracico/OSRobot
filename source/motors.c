@@ -1,14 +1,15 @@
 #include "../include/motors.h"
 
-//Possibly not working ?
+// Possibly not working ?
 #define Sleep(msec) usleep((msec) * 1000)
 
-//Create the 3 ID variables of our motors
+// Create the 3 ID variables of our motors
 uint8_t arm = -1;        // Port A
 uint8_t rightWheel = -1; // Port B
 uint8_t leftWheel = -1;  // Port C
 
-//Setup the motors. Wait for general initialization before continuing with the function
+// Implemented by: Jim
+// Setup the motors. Wait for general initialization before continuing with the function
 bool setup_motors(void)
 {
     while (ev3_tacho_init() < 1)
@@ -55,7 +56,7 @@ bool setup_motors(void)
         return false;
     }
 
-    //Setup the attributes of each motors such as acceleration or max speed.
+    // Setup the attributes of each motors such as acceleration or max speed.
     int arr[] = {arm, leftWheel, rightWheel};
     for (int i = 0; i <= 2; i++)
     {
@@ -83,7 +84,8 @@ bool setup_motors(void)
     return true;
 }
 
-// Change the speed of the wheel motors. Quotient is the divider of the speed. 
+// Implemented by: Jim
+// Change the speed of the wheel motors. Quotient is the divider of the speed.
 // In our case, we always use the same speed for both motors as instead use wheel direction to turn.
 bool change_motors_speed(int multiplier, int quotient)
 {
@@ -100,6 +102,7 @@ bool change_motors_speed(int multiplier, int quotient)
     return true;
 }
 
+// Implemented by: Jim
 // Change the speed of the motors. Quotient is the divider of the speed. (Arm speed function)
 bool change_arm_speed(int value)
 {
@@ -107,8 +110,9 @@ bool change_arm_speed(int value)
     return true;
 }
 
-//Function to move motors by time. Direction should be positive for going backward, and negative to go forward.
-//Blocking is used if we want to prevent the program to do other actions during the motors moving. Allows us to handle
+// Implemented by: Jim
+// Function to move motors by time. Direction should be positive for going backward, and negative to go forward.
+// Blocking is used if we want to prevent the program to do other actions during the motors moving. Allows us to handle
 // cases when we wants the motor to stop before using another motor (For example, move forward, stop then use the arm)
 void move_motor(uint8_t sn, int direction, bool blocking)
 {
@@ -125,7 +129,8 @@ void move_motor(uint8_t sn, int direction, bool blocking)
     }
 }
 
-//Similar as function above, except the moving is done by angle of the motor (Not very precise) and not by time.
+// Implemented by: Jim
+// Similar as function above, except the moving is done by angle of the motor (Not very precise) and not by time.
 void move_motor_angle(uint8_t sn, int degrees, bool blocking)
 {
     FLAGS_T state;
@@ -141,14 +146,16 @@ void move_motor_angle(uint8_t sn, int degrees, bool blocking)
     }
 }
 
-//Used to stop the motors. Useful when we need to stop the wheel faster or stop the arm from staying in a blocked position
+// Implemented by: Jim
+// Used to stop the motors. Useful when we need to stop the wheel faster or stop the arm from staying in a blocked position
 void stop_motor(uint8_t sn)
 {
     set_tacho_command_inx(sn, TACHO_STOP);
 }
 
-//Hold the program until both wheel potors are stopped, allows us a greater precision for the arm by making sure the
-//Robot is not moving anymore
+// Implemented by: Jim
+// Hold the program until both wheel potors are stopped, allows us a greater precision for the arm by making sure the
+// Robot is not moving anymore
 void wait_motor_stop()
 {
     FLAGS_T stateLeft, stateRight;
@@ -159,7 +166,8 @@ void wait_motor_stop()
     } while ((leftWheel != 2 && leftWheel != 0) || (stateRight != 2 && stateRight != 0));
 }
 
-//Other version of stop motor, we are getting better result by combining both Techo hold and tacho stop.
+// Implemented by: Jim
+// Other version of stop motor, we are getting better result by combining both Techo hold and tacho stop.
 void motor_stop()
 {
     set_tacho_command_inx(rightWheel, TACHO_HOLD);

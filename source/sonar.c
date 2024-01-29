@@ -2,7 +2,8 @@
 
 uint8_t port_sonar;
 
-//Initialize the sonar sensor
+// Implemented by: Efrén
+// Initialize the sonar sensor
 int init_sonar(void)
 {
 
@@ -25,10 +26,10 @@ int init_sonar(void)
     }
 }
 
-//Get the value from the sonar. Should be notted that if the sonar is too close from an object
+// Implemented by: Efrén
+// Get the value from the sonar. Should be notted that if the sonar is too close from an object
 // Like the flag or a wall, the returned value will bug out and be returned as a very large value (2000+)
 // It is better to try to avoid such a case if possible.
-
 int get_sonar(void)
 {
     int val;

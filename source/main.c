@@ -24,6 +24,7 @@ int correctDirection = 1;
 // In a lot of function, we will use print calls followed by fflush. fflush was necessary to print stuff in the console at runtime, else the print
 // Would not show in the console until the end of the execution.
 
+// Implemented by: Efrén
 // Create a thread and check the sonar to find the flag
 void *threadSonarFindFlag(void *vargp)
 {
@@ -45,6 +46,7 @@ void *threadSonarFindFlag(void *vargp)
     }
 }
 
+// Implemented by: Jim
 // Create a thread and check for obstacles with the sonar
 void *threadSonarObstacles(void *vargp)
 {
@@ -61,6 +63,7 @@ void *threadSonarObstacles(void *vargp)
     }
 }
 
+// Implemented by: André
 // Detect the color in front of the robot
 void *threadCountLines(void *vargp)
 {
@@ -88,6 +91,7 @@ void *threadCountLines(void *vargp)
     }
 }
 
+// Implemented by: Efrén
 // Main rotate function
 void rotateTo(int degrees)
 {
@@ -139,6 +143,7 @@ void rotateTo(int degrees)
     }
 }
 
+// Implemented by: Jim
 // Main move forward funct
 void moveForward(int direction, int degrees)
 {
@@ -179,6 +184,7 @@ void moveForward(int direction, int degrees)
     }
 }
 
+// Implemented by: Jim
 // Avoid obstacle function
 void avoid_obstacles(int direction, int degrees, int initial_value)
 {
@@ -198,6 +204,7 @@ void avoid_obstacles(int direction, int degrees, int initial_value)
     obstacle_found = 0;
 }
 
+// Implemented by: Efrén
 // Scan for the flag and correct the trajectory
 void scanFlagAndCorrect()
 {
@@ -226,15 +233,14 @@ void scanFlagAndCorrect()
     rotateTo(flag_angle);
 }
 
+// Implemented by: Efrén, André and Jim
 /* Main function
 The execution of the main is split into 4 main parts.
 - The robot will initially enter a cruising phase, where he will get from the starting point to the enemy base (With the obstacle dodging mechanic activated).
 - The robot enters the picking flag phase, where he will scan for it, turn around a grab it
 - The robot then enters a second cruising phase in order to reach back the base
-- The robot enteres the dropping phase, where he will rotate and try to drop the flag in the back 10 cm of the base
-
+- The robot enters the dropping phase, where he will rotate and try to drop the flag in the back 10 cm of the base
 */
-
 int main(void)
 {
     // Set up the different sensors and motors

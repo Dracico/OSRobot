@@ -5,13 +5,15 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 uint8_t port_touch;
-//Init sensors
+// Implemented by: Efrén
+// Init sensors
 int init_sensors(void)
 {
     return ev3_sensor_init();
 }
 
-//Initialize the touch sensor
+// Implemented by: Efrén
+// Initialize the touch sensor
 int init_touch(void)
 {
 
@@ -29,7 +31,8 @@ int init_touch(void)
     }
 }
 
-//Get the value of the touch sensor
+// Implemented by: Efrén
+// Get the value of the touch sensor
 bool get_touch(void)
 {
     int val;
