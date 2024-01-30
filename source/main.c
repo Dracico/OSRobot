@@ -292,6 +292,14 @@ int main(void)
     }
     pthread_cancel(threadSonarObstacles_id);
 
+    stop_motor(arm);
+    sleep(1);
+    move_motor_angle(arm, -80, false);
+    sleep(1);
+    move_motor_angle(arm, 400, false);
+    sleep(2);
+    stop_motor(arm);
+
     // Rotate on the left in order to aim for the enemy flag
     rotateTo(0);
 
@@ -300,7 +308,6 @@ int main(void)
     obstacle_found = 0;
     linesCrossed = 0;
     correctDirection = 1;
-    int obstacle = 0;
 
     // Start the obstacle and color sensor threads
     pthread_create(&threadSonarObstacles_id, NULL, threadSonarObstacles, NULL);
@@ -317,15 +324,6 @@ int main(void)
             {
                 avoid_obstacles(-1, 90, 0);
             }
-        }
-        if (!obstacle)
-        {
-            move_motor_angle(arm, -80, false);
-            sleep(1);
-            move_motor_angle(arm, 400, false);
-            sleep(2);
-            stop_motor(arm);
-            obstacle = 1;
         }
         moveForward(-1, 0);
     }
@@ -406,7 +404,7 @@ int main(void)
     // Rotate to face the right wall. Because we're going back, the 90° angle becomes 260°
     rotateTo(270);
     obstacle_found = 0;
-    obstacle_distance = 180;
+    obstacle_distance = 150;
     pthread_create(&threadSonarObstacles_id, NULL, threadSonarObstacles, NULL);
     while (obstacle_found == 0)
     {
